@@ -136,7 +136,6 @@ boolean mqtt_reconnect() {
   return client.connected();
 }
 
-
 bool s8Request(byte cmd[], int8_t response_lenght, int8_t rFlag) {
   s8Serial.begin(9600);
   byte response[response_lenght];
@@ -261,7 +260,6 @@ void setup() {
 
   s8Request(get_abc_cmd, GET_ABC_RLEN, GET_ABC_FLAG);
 }
-
 
 void loop() {
 
