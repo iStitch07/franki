@@ -6,6 +6,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <arduino_secrets.h>
+#include <ESPAsyncWebServer.h>
+#include <WebSerial.h>
 
 const char* ssid 		      = SECRET_GENERAL_WIFI_SSID;
 const char* password 		  = SECRET_GENERAL_WIFI_PASSWORD;
@@ -23,6 +25,7 @@ const char* mqttPassword 	= SECRET_MQTT_PASSWORD;
 #define CO2_INTERVAL 15000
 
 SoftwareSerial s8Serial(D7, D8);
+AsyncWebServer wserver(80);
 
 int co2 = 0;
 int co2_mean = 0;
@@ -63,11 +66,11 @@ long lastCo2Measured = 0;
 WiFiClient    espClient;
 PubSubClient  client(espClient);
 
-char hostname[]           = "franki";
+char hostname[]           = "esp8266-s8-bedroom";
 
-char mqtt_topic_status[]  = "esp/status/franki";
-char mqtt_topic_data[]    = "esp/sensors/co2/franki";
-char mqtt_topic_set[]     = "esp/set/franki";
+char mqtt_topic_status[]  = "esp/status/bedroom-co2";
+char mqtt_topic_data[]    = "esp/sensors/co2/bedroom-co2";
+char mqtt_topic_set[]     = "esp/set/bedroom-co2";
 
 long lastReconnectAttempt = 0;
 
@@ -126,12 +129,17 @@ boolean wifi_reconnect() {
 
 boolean mqtt_reconnect() {
   Serial.print("Connecting to MQTT...");
+  WebSerial.print("Connecting to MQTT...");
+
   if(client.connect(hostname, mqttUser, mqttPassword, mqtt_topic_status, 2, true, "offline")) {
     // Online Message
     client.publish(mqtt_topic_status, "online", true);
     client.subscribe(mqtt_topic_set);
+    WebSerial.println("MQTT connected.");
   } else {
     Serial.printf("failed with state: %d\n", client.state());
+    WebSerial.print("failed with state: ");
+    WebSerial.println((int) client.state());
   }
   return client.connected();
 }
@@ -248,14 +256,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+void web_callback(unsigned char* data, unsigned int length)
+{
+    data[length] = '\0';
+    Serial.println((char*) data);
+}
+
 void setup() {
   Serial.begin(115200);
   if(WiFi.status() != WL_CONNECTED) {
     wifi_reconnect();
   }
 
+  WebSerial.begin(&wserver);
+  WebSerial.msgCallback(web_callback);
+  wserver.begin();
+
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
+  
   mqtt_reconnect();
 
   s8Request(get_abc_cmd, GET_ABC_RLEN, GET_ABC_FLAG);
@@ -270,6 +289,7 @@ void loop() {
   }
 
   if(!client.connected()) {
+    WebSerial.println("MQTT disconnected, try to reconnect.");
     long now = millis();
     if(now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
@@ -289,6 +309,7 @@ void loop() {
     size_t n = serializeJson(jdoc, buffer);
     client.publish(mqtt_topic_data, buffer, n);
     lastCo2Measured = co2_time;
+    WebSerial.println("CO2 measured");
   }
 
 
