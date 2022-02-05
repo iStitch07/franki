@@ -135,6 +135,7 @@ boolean mqtt_reconnect() {
     // Online Message
     client.publish(mqtt_topic_status, "online", true);
     client.subscribe(mqtt_topic_set);
+    client.setKeepAlive(20);
     WebSerial.println("MQTT connected.");
   } else {
     Serial.printf("failed with state: %d\n", client.state());
@@ -196,7 +197,7 @@ bool s8Request(byte cmd[], int8_t response_lenght, int8_t rFlag) {
   }
 
   if(rFlag == SET_ABC_FLAG) {
-    if(memcmp(cmd, response, sizeof(cmd)) == 0) {
+    if(memcmp(cmd, response, sizeof(response)) == 0) {
       return true;
     } 
     else {
@@ -259,7 +260,32 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void web_callback(unsigned char* data, unsigned int length)
 {
     data[length] = '\0';
-    Serial.println((char*) data);
+    //Serial.println((char*) data);
+    WebSerial.println("===========================================");
+    WebSerial.print("WI-FI status: ");
+    WebSerial.println((int) WiFi.status());
+
+    WebSerial.print("MQTT state: ");
+    WebSerial.println((int) client.state());
+   // WebSerial.println("===========================================");
+
+    WebSerial.print("MQTT client connected: ");
+    WebSerial.println((bool) client.connected());
+    WebSerial.println("===========================================");
+
+//    client.publish("esp/status/bedroom-info", "test-message", sizeof("test-message"));
+
+    if(strcmp((char*)data, "reset") == 0) {
+      WebSerial.println("Reset ESP...");
+      ESP.restart();
+    }
+
+    if(strcmp((char*)data, "reconnect") == 0) {
+      WebSerial.println("Reconnect to MQTT...");
+      mqtt_reconnect();
+    }
+
+
 }
 
 void setup() {
@@ -285,10 +311,11 @@ void loop() {
   ArduinoOTA.handle();
 
   if (WiFi.status() != WL_CONNECTED) {
+    WebSerial.println("WI-FI disconnected, try to reconnect.");
     wifi_reconnect();
   }
 
-  if(!client.connected()) {
+/* if((int) client.state() < 0) {
     WebSerial.println("MQTT disconnected, try to reconnect.");
     long now = millis();
     if(now - lastReconnectAttempt > 5000) {
@@ -299,6 +326,16 @@ void loop() {
     }
   } else {
     client.loop();
+  } */
+
+  if(!client.connected()) {
+    long now = millis();
+    if(now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      if(mqtt_reconnect()) {
+        lastReconnectAttempt = 0;
+      }
+    }
   }
 
   long co2_time = millis();
