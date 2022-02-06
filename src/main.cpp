@@ -262,20 +262,36 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void web_callback(unsigned char* data, unsigned int length)
 {
     data[length] = '\0';
-    //Serial.println((char*) data);
     WebSerial.println("===========================================");
     WebSerial.print("MQTT Reconnect Count: ");
     WebSerial.println((int) MQTT_Reconnect_Count);
 
-    WebSerial.print("MQTT state: ");
-    WebSerial.println((int) client.state());
-   // WebSerial.println("===========================================");
+    //WebSerial.print("MQTT state: ");
+    //WebSerial.println((int) client.state());
 
-    WebSerial.print("MQTT client connected: ");
-    WebSerial.println((bool) client.connected());
+    //WebSerial.print("MQTT client connected: ");
+    //WebSerial.println((bool) client.connected());
+
+    if((bool)client.connected() == 0) {
+      WebSerial.println("connected = 0");
+    }
+
+    if((bool)client.connected() == 1) {
+      WebSerial.println("connected = 1");
+    }
+
+    if(client.connected()) {
+      WebSerial.println("connected = true");
+    }
+
+    if(!client.connected()) {
+      WebSerial.println("connected = false");
+    }
+
+
     WebSerial.println("===========================================");
 
-//    client.publish("esp/status/bedroom-info", "test-message", sizeof("test-message"));
+
 
     if(strcmp((char*)data, "reset") == 0) {
       WebSerial.println("Reset ESP...");
@@ -320,20 +336,22 @@ void loop() {
     wifi_reconnect();
   }
 
-  if(!client.connected() || (bool)client.connected() == 0) {
+  client.loop();
+
+/*   if(!client.connected() || (bool)client.connected() == 0) {
     long now = millis();
     if(now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       client.disconnect();
       mqtt_reconnect();
       lastReconnectAttempt = 0;
-/*       if(mqtt_reconnect()) {
+      if(mqtt_reconnect()) {
         lastReconnectAttempt = 0;
-      } */
+      }
     }
   } else {
     client.loop();
-  }
+  } */
 
   long co2_time = millis();
   if(co2_time - lastCo2Measured > CO2_INTERVAL) {
