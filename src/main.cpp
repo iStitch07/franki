@@ -57,6 +57,7 @@ byte set_abc_on[]       = { 0xFE, 0x06, 0x00, 0x1F, 0x00, 0xB4, 0xAC, 0x74 }; //
 #define BG_CALIBRATION_FLAG 8 
 
 long lastCo2Measured = 0;
+int MQTT_Reconnect_Count = 0;
 
 
 // ==============================================================================
@@ -142,6 +143,7 @@ boolean mqtt_reconnect() {
     WebSerial.print("failed with state: ");
     WebSerial.println((int) client.state());
   }
+  MQTT_Reconnect_Count = MQTT_Reconnect_Count + 1;
   return client.connected();
 }
 
@@ -262,8 +264,8 @@ void web_callback(unsigned char* data, unsigned int length)
     data[length] = '\0';
     //Serial.println((char*) data);
     WebSerial.println("===========================================");
-    WebSerial.print("WI-FI status: ");
-    WebSerial.println((int) WiFi.status());
+    WebSerial.print("MQTT Reconnect Count: ");
+    WebSerial.println((int) MQTT_Reconnect_Count);
 
     WebSerial.print("MQTT state: ");
     WebSerial.println((int) client.state());
@@ -300,6 +302,9 @@ void setup() {
 
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
+
+  lastReconnectAttempt = 0;
+  MQTT_Reconnect_Count = 0;
   
   mqtt_reconnect();
 
@@ -315,27 +320,19 @@ void loop() {
     wifi_reconnect();
   }
 
-/* if((int) client.state() < 0) {
-    WebSerial.println("MQTT disconnected, try to reconnect.");
+  if(!client.connected() || (bool)client.connected() == 0) {
     long now = millis();
     if(now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
-      if(mqtt_reconnect()) {
+      client.disconnect();
+      mqtt_reconnect();
+      lastReconnectAttempt = 0;
+/*       if(mqtt_reconnect()) {
         lastReconnectAttempt = 0;
-      }
+      } */
     }
   } else {
     client.loop();
-  } */
-
-  if(!client.connected()) {
-    long now = millis();
-    if(now - lastReconnectAttempt > 5000) {
-      lastReconnectAttempt = now;
-      if(mqtt_reconnect()) {
-        lastReconnectAttempt = 0;
-      }
-    }
   }
 
   long co2_time = millis();
