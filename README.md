@@ -19,16 +19,16 @@ Additional info:
 - Uptime of device;
 - Device numeric state;
 
-Example:
-        {
-            "IP:":"192.168.1.145",
-            "abc":180,
-            "Uptime":"00:00:19:30",
-            "current":561,
-            "mean":561,
-            "mean2":558,
-            "status":0
-        }
+Example:  
+`{
+    "IP:":"192.168.1.145",
+    "abc":180,
+    "Uptime":"00:00:19:30",
+    "current":561,
+    "mean":561,
+    "mean2":558,
+    "status":0
+}`
     
 ### Remote management
 
