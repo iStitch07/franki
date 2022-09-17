@@ -78,7 +78,6 @@ long lastReconnectAttempt = 0;
 
 const size_t capacity = JSON_OBJECT_SIZE(10) + 256;
 StaticJsonDocument<capacity> jdoc;
-char jsonBuffer[256];
 
 boolean wifi_reconnect() {
   WiFi.hostname(hostname);
@@ -265,14 +264,10 @@ void HumanReadableTime() {
   minutes %= 60;
   hours %= 24;
 
-  char timeBuffer [15];
+  char timeBuffer [25];
   sprintf (timeBuffer, "%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
-  Serial.println(timeBuffer);
   jdoc["Uptime"] = timeBuffer;
-  
-  Serial.printf("Json Memory Usage: %d\n", jdoc.memoryUsage());
-  jdoc.garbageCollect();
-
+  memset(timeBuffer, 0, sizeof(timeBuffer));
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -337,9 +332,16 @@ void loop() {
   if(co2_time - lastCo2Measured > CO2_INTERVAL) {
     HumanReadableTime();
     s8Request(get_co2_stat_cmd, GET_TWO_RLEN, GET_TWO_FLAG);
+
+    jdoc["JsonMemUsage"] = jdoc.memoryUsage();
+    jdoc["freeHeap"] = ESP.getFreeHeap();
+
+    char jsonBuffer[256];
+    memset(jsonBuffer, 0, sizeof(jsonBuffer));
     size_t n = serializeJson(jdoc, jsonBuffer);
     client.publish(mqtt_topic_data, jsonBuffer, n);
     lastCo2Measured = co2_time;
+    jdoc.garbageCollect();
   }
 
 
