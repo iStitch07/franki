@@ -7,4 +7,4 @@ Data sent to MQTT broker
 Implemented: CO2 measure, sensor status obtaining, manual calibration procedure
 
 On start open 911/udp port and waiting for control commands:
--- reboot: going esp in reboot
+- **reboot**: going esp in reboot
