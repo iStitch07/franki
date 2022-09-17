@@ -6,6 +6,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <arduino_secrets.h>
+#include <WiFiUdp.h>
 
 const char* ssid 		      = SECRET_GENERAL_WIFI_SSID;
 const char* password 		  = SECRET_GENERAL_WIFI_PASSWORD;
@@ -63,6 +64,10 @@ long lastCo2Measured = 0;
 WiFiClient    espClient;
 PubSubClient  client(espClient);
 
+WiFiUDP       wUDP;
+const int     UDP_PORT = 911;
+char          udp_packet[255];
+
 char hostname[]           = "franki";
 
 char mqtt_topic_status[]  = "esp/status/franki";
@@ -71,19 +76,27 @@ char mqtt_topic_set[]     = "esp/set/franki";
 
 long lastReconnectAttempt = 0;
 
-StaticJsonDocument<200> jdoc;
+const size_t capacity = JSON_OBJECT_SIZE(10) + 256;
+StaticJsonDocument<capacity> jdoc;
+char jsonBuffer[256];
 
 boolean wifi_reconnect() {
   WiFi.hostname(hostname);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting Wi-FI: ");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
   }
+  Serial.println("WI-FI connected");
 
   jdoc["IP:"] = WiFi.localIP();
+
+  wUDP.begin(UDP_PORT);
 
   ArduinoOTA.setPort(8266);
   ArduinoOTA.setHostname(hostname);
@@ -130,6 +143,7 @@ boolean mqtt_reconnect() {
     // Online Message
     client.publish(mqtt_topic_status, "online", true);
     client.subscribe(mqtt_topic_set);
+    Serial.println("MQTT Connected");
   } else {
     Serial.printf("failed with state: %d\n", client.state());
   }
@@ -234,6 +248,33 @@ void bg_calibration() {
 
 }
 
+void HumanReadableTime() {
+  unsigned long currentMillis;
+  unsigned long seconds;
+  unsigned long minutes;
+  unsigned long hours;
+  unsigned long days;
+
+  currentMillis = millis();
+  seconds = currentMillis / 1000;
+  minutes = seconds / 60;
+  hours = minutes / 60;
+  days = hours / 24;
+  currentMillis %= 1000;
+  seconds %= 60;
+  minutes %= 60;
+  hours %= 24;
+
+  char timeBuffer [15];
+  sprintf (timeBuffer, "%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
+  Serial.println(timeBuffer);
+  jdoc["Uptime"] = timeBuffer;
+  
+  Serial.printf("Json Memory Usage: %d\n", jdoc.memoryUsage());
+  jdoc.garbageCollect();
+
+}
+
 void callback(char* topic, byte* payload, unsigned int length) {
   char buff_p[length];
 
@@ -265,9 +306,7 @@ void loop() {
 
   ArduinoOTA.handle();
 
-  if (WiFi.status() != WL_CONNECTED) {
-    wifi_reconnect();
-  }
+  if (WiFi.status() != WL_CONNECTED) { wifi_reconnect(); }
 
   if(!client.connected()) {
     long now = millis();
@@ -281,13 +320,25 @@ void loop() {
     client.loop();
   }
 
+  int packetSize = wUDP.parsePacket();
+  if (packetSize) {
+    int len = wUDP.read(udp_packet, 255);
+    if (len > 0)
+    {
+      udp_packet[len] = '\0';
+    }
+
+    if(strcmp(udp_packet, "reboot") == 0) {
+      ESP.restart();
+    }
+  }
+
   long co2_time = millis();
   if(co2_time - lastCo2Measured > CO2_INTERVAL) {
+    HumanReadableTime();
     s8Request(get_co2_stat_cmd, GET_TWO_RLEN, GET_TWO_FLAG);
-    char buffer[256];
-    memset(buffer, 0, sizeof(buffer));
-    size_t n = serializeJson(jdoc, buffer);
-    client.publish(mqtt_topic_data, buffer, n);
+    size_t n = serializeJson(jdoc, jsonBuffer);
+    client.publish(mqtt_topic_data, jsonBuffer, n);
     lastCo2Measured = co2_time;
   }
 
