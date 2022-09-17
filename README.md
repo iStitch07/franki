@@ -20,23 +20,23 @@ Additional info:
 - Device numeric state;
 
 Example:
-    {
-      "IP:":"192.168.1.145",
-      "abc":180,
-      "Uptime":"00:00:19:30",
-      "current":561,
-      "mean":561,
-      "mean2":558,
-      "status":0
-    }
+        {
+            "IP:":"192.168.1.145",
+            "abc":180,
+            "Uptime":"00:00:19:30",
+            "current":561,
+            "mean":561,
+            "mean2":558,
+            "status":0
+        }
     
 ### Remote management
 
 Device can be remote management via MQTT and UDP  
 After start, device open and listening upd/911 port. At this time only one command is implemented: reboot.  
-You can send this command by netcat, for example for MacOS:
+You can send this command by netcat, for example for MacOS:  
     echo -n "reboot" | nc -4u -w0 <IP_ADDRESS_OF_DEVICE> 911
-    
+
 Also, you can start start manual calibrate proccess, by sending message "calibrate" to MQTT topic "esp/set/franki"
     
 
