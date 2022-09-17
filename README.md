@@ -20,7 +20,8 @@ Additional info:
 - Device numeric state;
 
 Example:  
-`{
+```json
+{
     "IP:":"192.168.1.145",
     "abc":180,
     "Uptime":"00:00:19:30",
@@ -28,7 +29,8 @@ Example:
     "mean":561,
     "mean2":558,
     "status":0
-}`
+}
+```
     
 ### Remote management
 
