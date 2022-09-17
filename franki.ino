@@ -54,7 +54,7 @@ byte set_abc_on[]       = { 0xFE, 0x06, 0x00, 0x1F, 0x00, 0xB4, 0xAC, 0x74 }; //
 #define SET_ABC_FLAG 4
 #define BG_CALIBRATION_FLAG 8 
 
-long lastCo2Measured = 0;
+unsigned long lastCo2Measured = 0;
 
 
 // ==============================================================================
@@ -74,7 +74,7 @@ char mqtt_topic_status[]  = "esp/status/franki";
 char mqtt_topic_data[]    = "esp/sensors/co2/franki";
 char mqtt_topic_set[]     = "esp/set/franki";
 
-long lastReconnectAttempt = 0;
+unsigned long lastReconnectAttempt = 0;
 
 const size_t capacity = JSON_OBJECT_SIZE(10) + 256;
 StaticJsonDocument<capacity> jdoc;
@@ -304,7 +304,7 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) { wifi_reconnect(); }
 
   if(!client.connected()) {
-    long now = millis();
+    unsigned long now = millis();
     if(now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       if(mqtt_reconnect()) {
@@ -328,7 +328,7 @@ void loop() {
     }
   }
 
-  long co2_time = millis();
+  unsigned long co2_time = millis();
   if(co2_time - lastCo2Measured > CO2_INTERVAL) {
     HumanReadableTime();
     s8Request(get_co2_stat_cmd, GET_TWO_RLEN, GET_TWO_FLAG);
