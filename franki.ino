@@ -8,12 +8,12 @@
 #include <arduino_secrets.h>
 #include <WiFiUdp.h>
 
-const char* ssid 		      = SECRET_GENERAL_WIFI_SSID;
-const char* password 		  = SECRET_GENERAL_WIFI_PASSWORD;
-const char* mqttServer	  = SECRET_MQTT_SERVER;
-const int   mqttPort 		  = SECRET_MQTT_PORT;
-const char* mqttUser 		  = SECRET_MQTT_USER;
-const char* mqttPassword 	= SECRET_MQTT_PASSWORD;
+const char* ssid          = SECRET_GENERAL_WIFI_SSID;
+const char* password      = SECRET_GENERAL_WIFI_PASSWORD;
+const char* mqttServer    = SECRET_MQTT_SERVER;
+const int   mqttPort      = SECRET_MQTT_PORT;
+const char* mqttUser      = SECRET_MQTT_USER;
+const char* mqttPassword  = SECRET_MQTT_PASSWORD;
 
 // ==============================================================================
 // S8 Init zone
@@ -31,8 +31,8 @@ int co2_mean2 = 0;
 int abc_time = 0;
 int s8_status = 0;
 
-float smoothing_factor = 0.5;
-float smoothing_factor2 = 0.15;
+const float smoothing_factor = 0.5;
+const float smoothing_factor2 = 0.15;
 
 byte get_co2_cmd[]      = { 0xFE, 0x04, 0x00, 0x03, 0x00, 0x01, 0xD5, 0xC5 }; // Get CO2 value from sensor
 byte get_abc_cmd[]      = { 0xFE, 0x03, 0x00, 0x1F, 0x00, 0x01, 0xA1, 0xC3 }; // Get Auto Baseline Calibration time
@@ -68,11 +68,11 @@ WiFiUDP       wUDP;
 const int     UDP_PORT = 911;
 char          udp_packet[255];
 
-char hostname[]           = "franki";
+const char hostname[]           = "franki";
 
-char mqtt_topic_status[]  = "esp/status/franki";
-char mqtt_topic_data[]    = "esp/sensors/co2/franki";
-char mqtt_topic_set[]     = "esp/set/franki";
+const char mqtt_topic_status[]  = "esp/status/franki";
+const char mqtt_topic_data[]    = "esp/sensors/co2/franki";
+const char mqtt_topic_set[]     = "esp/set/franki";
 
 unsigned long lastReconnectAttempt = 0;
 
