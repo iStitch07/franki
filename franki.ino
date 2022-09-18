@@ -64,9 +64,9 @@ unsigned long lastCo2Measured = 0;
 WiFiClient    espClient;
 PubSubClient  client(espClient);
 
-WiFiUDP       wUDP;
-const int     UDP_PORT = 911;
-char          udp_packet[255];
+// WiFiUDP       wUDP;
+// const int     UDP_PORT = 911;
+// char          udp_packet[255];
 
 const char hostname[]           = "franki";
 
@@ -76,8 +76,9 @@ const char mqtt_topic_set[]     = "esp/set/franki";
 
 unsigned long lastReconnectAttempt = 0;
 
-const size_t capacity = JSON_OBJECT_SIZE(10) + 256;
-StaticJsonDocument<capacity> jdoc;
+// const size_t capacity = JSON_OBJECT_SIZE(10) + 256;
+// StaticJsonDocument<capacity> jdoc;
+StaticJsonDocument<200> jdoc;
 
 boolean wifi_reconnect() {
   WiFi.hostname(hostname);
@@ -95,7 +96,7 @@ boolean wifi_reconnect() {
 
   jdoc["IP:"] = WiFi.localIP();
 
-  wUDP.begin(UDP_PORT);
+  //wUDP.begin(UDP_PORT);
 
   ArduinoOTA.setPort(8266);
   ArduinoOTA.setHostname(hostname);
@@ -247,28 +248,28 @@ void bg_calibration() {
 
 }
 
-void HumanReadableTime() {
-  unsigned long currentMillis;
-  unsigned long seconds;
-  unsigned long minutes;
-  unsigned long hours;
-  unsigned long days;
+// void HumanReadableTime() {
+//   unsigned long currentMillis;
+//   unsigned long seconds;
+//   unsigned long minutes;
+//   unsigned long hours;
+//   unsigned long days;
 
-  currentMillis = millis();
-  seconds = currentMillis / 1000;
-  minutes = seconds / 60;
-  hours = minutes / 60;
-  days = hours / 24;
-  currentMillis %= 1000;
-  seconds %= 60;
-  minutes %= 60;
-  hours %= 24;
+//   currentMillis = millis();
+//   seconds = currentMillis / 1000;
+//   minutes = seconds / 60;
+//   hours = minutes / 60;
+//   days = hours / 24;
+//   currentMillis %= 1000;
+//   seconds %= 60;
+//   minutes %= 60;
+//   hours %= 24;
 
-  char timeBuffer [25];
-  sprintf (timeBuffer, "%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
-  jdoc["Uptime"] = timeBuffer;
-  memset(timeBuffer, 0, sizeof(timeBuffer));
-}
+//   char timeBuffer [25];
+//   sprintf (timeBuffer, "%02d:%02d:%02d:%02d", days, hours, minutes, seconds);
+//   jdoc["Uptime"] = timeBuffer;
+//   memset(timeBuffer, 0, sizeof(timeBuffer));
+// }
 
 void callback(char* topic, byte* payload, unsigned int length) {
   char buff_p[length];
@@ -315,22 +316,22 @@ void loop() {
     client.loop();
   }
 
-  int packetSize = wUDP.parsePacket();
-  if (packetSize) {
-    int len = wUDP.read(udp_packet, 255);
-    if (len > 0)
-    {
-      udp_packet[len] = '\0';
-    }
+  // int packetSize = wUDP.parsePacket();
+  // if (packetSize) {
+  //   int len = wUDP.read(udp_packet, 255);
+  //   if (len > 0)
+  //   {
+  //     udp_packet[len] = '\0';
+  //   }
 
-    if(strcmp(udp_packet, "reboot") == 0) {
-      ESP.restart();
-    }
-  }
+  //   if(strcmp(udp_packet, "reboot") == 0) {
+  //     ESP.restart();
+  //   }
+  // }
 
   unsigned long co2_time = millis();
   if(co2_time - lastCo2Measured > CO2_INTERVAL) {
-    HumanReadableTime();
+    //HumanReadableTime();
     s8Request(get_co2_stat_cmd, GET_TWO_RLEN, GET_TWO_FLAG);
 
     jdoc["JsonMemUsage"] = jdoc.memoryUsage();
@@ -341,7 +342,7 @@ void loop() {
     size_t n = serializeJson(jdoc, jsonBuffer);
     client.publish(mqtt_topic_data, jsonBuffer, n);
     lastCo2Measured = co2_time;
-    jdoc.garbageCollect();
+    //jdoc.garbageCollect();
   }
 
 
