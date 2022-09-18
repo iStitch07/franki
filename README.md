@@ -37,7 +37,8 @@ Example:
 ### Remote management
 
 Device can be remote management via MQTT and UDP  
-After start, device open and listening upd/911 port. At this time only one command is implemented: reboot.  
+After start, device open and listening 911/udp port.  
+At this time only one command is implemented: reboot.  
 You can send this command by netcat, for example for MacOS:  
     `echo -n "reboot" | nc -4u -w0 <IP_ADDRESS_OF_DEVICE> 911`
 
