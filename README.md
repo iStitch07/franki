@@ -24,11 +24,13 @@ Example:
 {
     "IP:":"192.168.1.145",
     "abc":180,
-    "Uptime":"00:00:19:30",
-    "current":561,
-    "mean":561,
-    "mean2":558,
-    "status":0
+    "Uptime":"00:00:11:30",
+    "current":553,
+    "mean":553,
+    "mean2":552,
+    "status":0,
+    "JsonMemUsage":182,
+    "freeHeap":46352
 }
 ```
     
